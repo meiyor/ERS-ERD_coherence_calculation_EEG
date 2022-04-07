@@ -1,5 +1,5 @@
 function [p,F,pt,Ft,pt1,Ft1,pt2,Ft2,pt3,Ft3,pt4,Ft4,mdl1,mdl2,pvalv,Fvalv,pvalvr,Fvalvr,Rvall,Rvalr]=evaluate_activation(S_EKSO,channel_ind,val_freq,lims,timev,samp_size)
-##PARAMETERS -> channel_ind: vector with the vector index following, the string cell array called channel_labels, val_freq:  vector of frequency limites e.g., [8 15] for alpha rhythm, lims: plot limits [-1 1] depending if this is normalized or not, timev: vector with the percentage of gait cicle limits e.g [0 0.5] or [0.5 1] values admitted between 0 and 1 where 0 is 0% and 1 is 100%, samp_size: [100,100]  by default in the results but redefine it depending how you resample the ERSP image
+%%PARAMETERS -> channel_ind: vector with the vector index following, the string cell array called channel_labels, val_freq:  vector of frequency limites e.g., [8 15] for alpha rhythm, lims: plot limits [-1 1] depending if this is normalized or not, timev: vector with the percentage of gait cicle limits e.g [0 0.5] or [0.5 1] values admitted between 0 and 1 where 0 is 0% and 1 is 100%, samp_size: [100,100]  by default in the results but redefine it depending how you resample the ERSP image
 close all;
 close all hidden;
 % %% all sample with exo-skeleton
