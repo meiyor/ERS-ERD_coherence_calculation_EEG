@@ -1,5 +1,5 @@
 function glm_coherence_eval_right(S_OG,S_EKSO,channels,freq,muscle,phase,sel_ersp_data)
-## PARAMETERS -> channels: vector of channels index depending on the channel index given in the initial analyisis, freq: frequency vector with maximum between 0 and 100Hz, muscle:1->SO, 2-> ST, 3->TA, 4-> RF, phase: select the phase to analyze in the gait cycle, sel_ersp_data: it will select the limb to analyze in the coherence analysis 0->left, right-> 1.
+%% PARAMETERS -> channels: vector of channels index depending on the channel index given in the initial analyisis, freq: frequency vector with maximum between 0 and 100Hz, muscle:1->SO, 2-> ST, 3->TA, 4-> RF, phase: select the phase to analyze in the gait cycle, sel_ersp_data: it will select the limb to analyze in the coherence analysis 0->left, right-> 1.
 %% comment this section if you already have the data loaded
 S_OG{1}=load([pwd '/data_res_OG_vals_formal/Subj 01_Run 4_res_coherence_OG.mat']);
 S_OG{2}=load([pwd '/data_res_OG_vals_formal/Subj 02_Run 4_res_coherence_OG.mat']);
