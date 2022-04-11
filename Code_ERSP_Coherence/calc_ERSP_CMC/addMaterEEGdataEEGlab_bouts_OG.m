@@ -82,8 +82,8 @@ while ind==0
               if ~isreal(EEGR_set{ccount}.data(ch,:))
                   EEGR_set{ccount}.data(ch,:)=real(EEGR_set{ccount}.data(ch,:));
               end;
-              [erspl{ccount,ch},itcpl{ccount,ch},powbasel{ccount,ch},timescl{ccount,ch},freql{ccount,ch}]=newtimef(EEGL_set{ccount}.data(ch,:),EEGL_set{ccount}.pnts,[EEGL_set{ccount}.xmin EEGL_set{ccount}.xmax]*1000,EEGL_set{ccount}.srate,0,'winsize',50,'nfreqs',1000,'freqs',[0 50],'padratio',32,'plotersp','off','plotitc','off');
-              [erspr{ccount,ch},itcpr{ccount,ch},powbaser{ccount,ch},timescr{ccount,ch},freqr{ccount,ch}]=newtimef(EEGR_set{ccount}.data(ch,:),EEGR_set{ccount}.pnts,[EEGR_set{ccount}.xmin EEGR_set{ccount}.xmax]*1000,EEGR_set{ccount}.srate,0,'winsize',50,'nfreqs',1000,'freqs',[0 50],'padratio',32,'plotersp','off','plotitc','off');
+              [erspl{ccount,ch},itcpl{ccount,ch},powbasel{ccount,ch},timescl{ccount,ch},freql{ccount,ch}]=newtimef(EEGL_set{ccount}.data(ch,:),EEGL_set{ccount}.pnts,[EEGL_set{ccount}.xmin EEGL_set{ccount}.xmax]*1000,EEGL_set{ccount}.srate,0,'winsize',200,'nfreqs',1000,'freqs',[0 50],'padratio',32,'plotersp','off','plotitc','off');
+              [erspr{ccount,ch},itcpr{ccount,ch},powbaser{ccount,ch},timescr{ccount,ch},freqr{ccount,ch}]=newtimef(EEGR_set{ccount}.data(ch,:),EEGR_set{ccount}.pnts,[EEGR_set{ccount}.xmin EEGR_set{ccount}.xmax]*1000,EEGR_set{ccount}.srate,0,'winsize',200,'nfreqs',1000,'freqs',[0 50],'padratio',32,'plotersp','off','plotitc','off');
               %[erspr{ccount,ch},itcpr{ccount,ch},powbaser{ccount,ch},timescr{ccount,ch},freqr{ccount,ch}]=newtimef(EEGR_set{ccount}.data(ch,:),EEGR_set{ccount}.pnts,[EEGR_set{ccount}.xmin EEGR_set{ccount}.xmax]*1000,EEGR_set{ccount}.srate,0,'itctype','phasecoher','winsize',40,'freqs',[0.1 20],'nfreqs',250,'padratio',16,'plotersp','off','plotitc','off');
               ccount
               if sel_emg==1
