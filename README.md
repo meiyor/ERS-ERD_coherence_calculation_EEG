@@ -18,6 +18,6 @@ For replicating the ERSP and CMC with other data, please refer to the data direc
 **addMaterEEGdataEEGlab_bouts** and **addMaterEEGdataEEGlab_bouts_OG** . You can call the individual ERSP and/or CMC trial calculation using the following command on the Matlab prompt.
 
 ```matlab 
-   addMaterEEGdataEEGlab_bouts(SUJECT_ID,RUN_TRIAL_ID,[100,100],1); %%SUBJECT_ID and RUN_TRIAL_ID are strings with subjec and run identifiers in your custom dataset
+   addMaterEEGdataEEGlab_bouts(SUJECT_ID,RUN_TRIAL_ID,[100,100],1); %%SUBJECT_ID and RUN_TRIAL_ID are strings with subject and run/trial identifiers in your custom dataset. Please define that in the data directory apriori
 ```
 For the dataset you want to process please separate the EEG files on subjects and runs index for make the execution easier and also easier for replication.
