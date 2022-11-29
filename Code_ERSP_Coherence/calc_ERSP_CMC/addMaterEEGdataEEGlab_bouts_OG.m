@@ -36,8 +36,8 @@ while ind==0
          end;
          EEGL_set{ccount}=pop_autobssemg(EEGL_set{ccount},1,1,'bsscca',{'eigratio',1e6},'emg_psd',{'ratio',10,'fs',250,'range',[1 10]});
          EEGR_set{ccount}=pop_autobssemg(EEGR_set{ccount},1,1,'bsscca',{'eigratio',1e6},'emg_psd',{'ratio',10,'fs',250,'range',[1 10]});
-         %EEGL_set{ccount}=clean_rawdata(EEGL_set{ccount},5,[0.25 0.75],0.85,-1,-1,-1);
-         %EEGR_set{ccount}=clean_rawdata(EEGR_set{ccount},5,[0.25 0.75],0.85,-1,-1,-1);
+         EEGL_set{ccount}=clean_rawdata(EEGL_set{ccount},5,[0.25 0.75],0.85,-1,-1,-1);
+         EEGR_set{ccount}=clean_rawdata(EEGR_set{ccount},5,[0.25 0.75],0.85,-1,-1,-1);
          [EEGL_set{ccount}.icaweights,EEGL_set{ccount}.icasphere]=runica(EEGL_set{ccount}.data(:,:),'sphering','on','lrate',1e-5,'maxsteps',50); 
          [EEGR_set{ccount}.icaweights,EEGR_set{ccount}.icasphere]=runica(EEGR_set{ccount}.data(:,:),'sphering','on','lrate',1e-5,'maxsteps',50); 
          delete('report_left_n.txt');
