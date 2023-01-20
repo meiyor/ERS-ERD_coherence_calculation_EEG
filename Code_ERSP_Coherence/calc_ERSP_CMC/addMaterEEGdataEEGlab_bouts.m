@@ -1,9 +1,8 @@
 function addMaterEEGdataEEGlab_bouts(subj,runind,size_resamp,sel_emg)
-
-%% PARAMETERS -> subj: Subject string ID, runind: run index in integer it will be converted to string in subsequent functions, size_resamp: This is the two dimensional vector which is used to resample (default [100 100]), sel_emg: EMG selector for detect the walking bouts on the trial always 1.
-%% add the EEGlab path here to employ EEG signal preprocessing if necessary - Please set the EEGlab and Data path here before running the rest of the code%%
-%addpath(genpath('/path/eeglab14_1_1b'));
-%rmpath('/path/eeglab14_1_1b');
+%% add the EEGlab path here to employ EEG signal preprocessing if necessary %%
+%addpath(genpath('/home/jmm_vivobook_asus/DeepGaze_project/eeglab14_1_1b'));%%%% add path eeglab
+%
+%rmpath('/home/jmm_vivobook_asus/DeepGaze_project/eeglab14_1_1b/field_trip'); %%%% remove field_trip from eeglab
 ind=0;
 ccount=1;
 ckcount=1;
@@ -15,7 +14,7 @@ end;
 while ind==0
      EEGL=eeg_emptyset();
      EEGR=eeg_emptyset();
-     [accel{ccount},EEG{ccount},ind,indbout,EMG_sal{ccount}]=read_subjects_EEG_Mater_alt(subj,runind,ckcount,1,0,1,sel_emg,3,EMG.syncData); %% processing the window in 3 seconds around the Bout detection
+     [accel{ccount},EEG{ccount},ind,indbout,EMG_sal{ccount}]=read_subjects_EEG_Mater_alt(subj,runind,ckcount,1,0,1,sel_emg,5,EMG.syncData); %% processing the window on 5 seconds around the Bout detection
      %ind
      if ind==1
          %save([subj '_' runind '_res_vals.mat'],'erspl','itcpl','freql','erspr','itcpr','freqr','tl','tr');
@@ -23,6 +22,7 @@ while ind==0
      end;
      EEGL_set{ccount}=EEGlabstructure_def(EEGL,EEG{ccount}{2,1}',EEG{ccount}{4,1},EEG{ccount}{6,1},EEG{ccount}{1,1},subj,runind);
      EEGR_set{ccount}=EEGlabstructure_def(EEGR,EEG{ccount}{2,2}',EEG{ccount}{4,2},EEG{ccount}{6,2},EEG{ccount}{1,2},subj,runind);
+     
      if indbout==0
          EEGL_set{ccount} = pop_eegfiltnew(EEGL_set{ccount},0.1,100,8250);
          EEGR_set{ccount} = pop_eegfiltnew(EEGR_set{ccount},0.1,100,8250);
@@ -34,12 +34,123 @@ while ind==0
                     t_data=detrend(t_data);
                     EEGR_set{ccount}.data(k,:)=t_data(2/2:EEGR_set{ccount}.pnts+(2/2-1));
          end;
+         
+         baseline_channame_L={EEGL_set{ccount}.chanlocs(:).labels};
+         baseline_chanloc_L=EEGL_set{ccount}.chanlocs;
+         
+         baseline_channame_R={EEGR_set{ccount}.chanlocs(:).labels};
+         baseline_chanloc_R=EEGR_set{ccount}.chanlocs;
+         
          EEGL_set{ccount}=pop_autobssemg(EEGL_set{ccount},1,1,'bsscca',{'eigratio',1e6},'emg_psd',{'ratio',10,'fs',250,'range',[1 10]});
          EEGR_set{ccount}=pop_autobssemg(EEGR_set{ccount},1,1,'bsscca',{'eigratio',1e6},'emg_psd',{'ratio',10,'fs',250,'range',[1 10]});
          EEGL_set{ccount}=clean_rawdata(EEGL_set{ccount},5,[0.25 0.75],0.85,-1,-1,-1);
          EEGR_set{ccount}=clean_rawdata(EEGR_set{ccount},5,[0.25 0.75],0.85,-1,-1,-1);
-         [EEGL_set{ccount}.icaweights,EEGL_set{ccount}.icasphere]=runica(EEGL_set{ccount}.data(:,:),'sphering','on','lrate',1e-5,'maxsteps',50); 
-         [EEGR_set{ccount}.icaweights,EEGR_set{ccount}.icasphere]=runica(EEGR_set{ccount}.data(:,:),'sphering','on','lrate',1e-5,'maxsteps',50); 
+         
+         %% organize data after ASR
+         EEGchanL=32;
+         EEGchanR=32;
+         
+         EEG_temp_L=EEGL_set{ccount};
+         EEG_temp_R=EEGR_set{ccount};
+         if EEGL_set{ccount}.nbchan~=32
+               valdiff=setdiff(baseline_channame_L,{EEGL_set{ccount}.chanlocs(:).labels});
+               inddiff=find(ismember(baseline_channame_L,valdiff)==1);
+               EEG_temp_L.chanlocs=baseline_chanloc_L;
+               c_Prev=1;
+               c_Prev_orig=1;
+               temp=zeros([EEGchanL,size(EEGL_set{ccount}.data,2),size(EEGL_set{ccount}.data,3)]);
+               if length(inddiff)==1
+                  temp(1:inddiff(1)-1,:,:)=EEGL_set{ccount}.data(1:inddiff(1)-1,:,:);
+                  temp(inddiff(1)+1:end,:,:)=EEGL_set{ccount}.data(inddiff(1):end,:,:);
+               else
+                   for j=1:length(inddiff)
+                       if j~=length(inddiff)
+                           if j==1
+                              temp(c_Prev:inddiff(j)-1,:,:)=EEGL_set{ccount}.data(c_Prev:inddiff(j)-1,:,:);
+                           else
+                               if c_Prev+(inddiff(j+1)-inddiff(j))-1>size(EEGL_set{ccount}.data,1)
+                                    val_diff=((c_Prev+(inddiff(j+1)-inddiff(j))-1)-size(EEGL_set{ccount}.data,1));
+                                    temp(inddiff(j)+1:inddiff(j+1)-1,:,:)=EEGL_set{ccount}.data((c_Prev+1:c_Prev+(inddiff(j+1)-inddiff(j))-1)-val_diff,:,:);
+                               else
+                                    temp(inddiff(j)+1:inddiff(j+1)-1,:,:)=EEGL_set{ccount}.data(c_Prev+1:c_Prev+(inddiff(j+1)-inddiff(j))-1,:,:);
+                               end;
+                           end;
+                       else
+                           if inddiff(j)~=EEGchanL
+                             if size(temp(inddiff(j)+1:end,:,:),1)~=size(EEGL_set{ccount}.data(c_Prev:end,:,:),1)   
+                                 temp(inddiff(j)+1:end,:,:)=EEGL_set{ccount}.data(c_Prev-1:end,:,:);
+                             else
+                                 temp(inddiff(j)+1:end,:,:)=EEGL_set{ccount}.data(c_Prev:end,:,:);
+                             end
+                           end;
+                       end;
+                       %temp(inddiff(j),:)=zeros([1,size(EEG{tm_sb}.data,2)]);
+                       if j==1
+                          if length(inddiff)>2
+                             c_Prev=c_Prev+(inddiff(j+1)-inddiff(j));%inddiff(j);
+                          else
+                             c_Prev=inddiff(j+1)-1;
+                          end;
+                       elseif j~=length(inddiff)
+                           c_Prev=c_Prev+(inddiff(j+1)-inddiff(j))-1;
+                       end;
+                   end;
+          end;
+          EEGL_set{ccount}.data=temp;
+          EEGL_set{ccount}.nbchan=EEGchanL;
+         end;
+
+         if EEGR_set{ccount}.nbchan~=32
+               valdiff=setdiff(baseline_channame_R,{EEGR_set{ccount}.chanlocs(:).labels});
+               inddiff=find(ismember(baseline_channame_R,valdiff)==1);
+               EEG_temp_R.chanlocs=baseline_chanloc_R;
+               c_Prev=1;
+               c_Prev_orig=1;
+               temp=zeros([EEGchanR,size(EEGR_set{ccount}.data,2),size(EEGR_set{ccount}.data,3)]);
+               if length(inddiff)==1
+                  temp(1:inddiff(1)-1,:,:)=EEGR_set{ccount}.data(1:inddiff(1)-1,:,:);
+                  temp(inddiff(1)+1:end,:,:)=EEGR_set{ccount}.data(inddiff(1):end,:,:);
+               else
+                   for j=1:length(inddiff)
+                       if j~=length(inddiff)
+                           if j==1
+                              temp(c_Prev:inddiff(j)-1,:,:)=EEGR_set{ccount}.data(c_Prev:inddiff(j)-1,:,:);
+                           else
+                               if c_Prev+(inddiff(j+1)-inddiff(j))-1>size(EEGR_set{ccount}.data,1)
+                                    val_diff=((c_Prev+(inddiff(j+1)-inddiff(j))-1)-size(EEGR_set{ccount}.data,1));
+                                    temp(inddiff(j)+1:inddiff(j+1)-1,:,:)=EEGR_set{ccount}.data((c_Prev+1:c_Prev+(inddiff(j+1)-inddiff(j))-1)-val_diff,:,:);
+                               else
+                                    temp(inddiff(j)+1:inddiff(j+1)-1,:,:)=EEGR_set{ccount}.data(c_Prev+1:c_Prev+(inddiff(j+1)-inddiff(j))-1,:,:);
+                               end;
+                           end;
+                       else
+                           if inddiff(j)~=EEGchanR
+                             if size(temp(inddiff(j)+1:end,:,:),1)~=size(EEGR_set{ccount}.data(c_Prev:end,:,:),1)   
+                                 temp(inddiff(j)+1:end,:,:)=EEGR_set{ccount}.data(c_Prev-1:end,:,:);
+                             else
+                                 temp(inddiff(j)+1:end,:,:)=EEGR_set{ccount}.data(c_Prev:end,:,:);
+                             end
+                           end;
+                       end;
+                       %temp(inddiff(j),:)=zeros([1,size(EEG{tm_sb}.data,2)]);
+                       if j==1
+                          if length(inddiff)>2
+                             c_Prev=c_Prev+(inddiff(j+1)-inddiff(j));%inddiff(j);
+                          else
+                             c_Prev=inddiff(j+1)-1;
+                          end;
+                       elseif j~=length(inddiff)
+                           c_Prev=c_Prev+(inddiff(j+1)-inddiff(j))-1;
+                       end;
+                   end;
+          end;
+         EEGR_set{ccount}.data=temp;
+         EEGR_set{ccount}.nbchan=EEGchanR;
+         end;
+
+         
+         [EEGL_set{ccount}.icaweights,EEGL_set{ccount}.icasphere]=runica(EEGL_set{ccount}.data(:,:),'sphering','on','lrate',1e-5,'maxsteps',100,'reset_randomseed','off'); 
+         [EEGR_set{ccount}.icaweights,EEGR_set{ccount}.icasphere]=runica(EEGR_set{ccount}.data(:,:),'sphering','on','lrate',1e-5,'maxsteps',100,'reset_randomseed','off'); 
          delete('report_left_n.txt');
          delete('report_right_n.txt');
          %% implement ADJUST here
@@ -73,10 +184,34 @@ while ind==0
          if tpr(ccount)>=10.5
             tpr(ccount)=0;
          end;
-         for ch=1:32
+         
+    close all;
+    if ~isreal(EEGL_set{ccount}.data(:,:))
+      EEGL_set{ccount}.data(:,:)=real(EEGL_set{ccount}.data(:,:));
+    end;
+    if ~isreal(EEGR_set{ccount}.data(:,:))
+      EEGR_set{ccount}.data(:,:)=real(EEGR_set{ccount}.data(:,:));
+    end;
+    
+    if isinf(EEGL_set{ccount}.data(:,:))
+      EEGL_set{ccount}.data(:,:)=0;
+    end;
+    if isinf(EEGR_set{ccount}.data(:,:))
+      EEGR_set{ccount}.data(:,:)=0;
+    end;     
+    
+    if isnan(EEGL_set{ccount}.data(:,:))
+      EEGL_set{ccount}.data(:,:)=0;
+    end;
+    if isnan(EEGR_set{ccount}.data(:,:))
+      EEGR_set{ccount}.data(:,:)=0;
+    end;   
+    
+    
+    for ch=1:32
               close all;
-              [erspl{ccount,ch},itcpl{ccount,ch},powbasel{ccount,ch},timescl{ccount,ch},freql{ccount,ch}]=newtimef(EEGL_set{ccount}.data(ch,:),EEGL_set{ccount}.pnts,[EEGL_set{ccount}.xmin EEGL_set{ccount}.xmax]*1000,EEGL_set{ccount}.srate,0,'winsize',200,'nfreqs',1000,'freqs',[0 50],'padratio',32,'plotersp','off','plotitc','off');
-              [erspr{ccount,ch},itcpr{ccount,ch},powbaser{ccount,ch},timescr{ccount,ch},freqr{ccount,ch}]=newtimef(EEGR_set{ccount}.data(ch,:),EEGR_set{ccount}.pnts,[EEGR_set{ccount}.xmin EEGR_set{ccount}.xmax]*1000,EEGR_set{ccount}.srate,0,'winsize',200,'nfreqs',1000,'freqs',[0 50],'padratio',32,'plotersp','off','plotitc','off');
+              [erspl{ccount,ch},itcpl{ccount,ch},powbasel{ccount,ch},timescl{ccount,ch},freql{ccount,ch}]=newtimef(EEGL_set{ccount}.data(ch,:),EEGL_set{ccount}.pnts,[EEGL_set{ccount}.xmin EEGL_set{ccount}.xmax]*1000,EEGL_set{ccount}.srate,0,'winsize',50,'nfreqs',1000,'freqs',[0 50],'padratio',32,'plotersp','off','plotitc','off');
+              [erspr{ccount,ch},itcpr{ccount,ch},powbaser{ccount,ch},timescr{ccount,ch},freqr{ccount,ch}]=newtimef(EEGR_set{ccount}.data(ch,:),EEGR_set{ccount}.pnts,[EEGR_set{ccount}.xmin EEGR_set{ccount}.xmax]*1000,EEGR_set{ccount}.srate,0,'winsize',50,'nfreqs',1000,'freqs',[0 50],'padratio',32,'plotersp','off','plotitc','off');
               %[erspr{ccount,ch},itcpr{ccount,ch},powbaser{ccount,ch},timescr{ccount,ch},freqr{ccount,ch}]=newtimef(EEGR_set{ccount}.data(ch,:),EEGR_set{ccount}.pnts,[EEGR_set{ccount}.xmin EEGR_set{ccount}.xmax]*1000,EEGR_set{ccount}.srate,0,'itctype','phasecoher','winsize',40,'freqs',[0.1 20],'nfreqs',250,'padratio',16,'plotersp','off','plotitc','off');
               if sel_emg==1
                   [PL1{ccount,ch},fL1{ccount}]=pwelch(squeeze(EEGL_set{ccount}.data(ch,:))./max(squeeze(EEGL_set{ccount}.data(ch,:))),squeeze(EEGL_set{ccount}.data(ch,:))./max(squeeze(EEGL_set{ccount}.data(ch,:))),250/2,1000,250,'psd','onesided');
@@ -176,8 +311,7 @@ while ind==0
          EEGR_set{ccount}=[];
      end;
      ckcount=ckcount+1;
+     ckcount
 end;
-
-%%save results in the desired output folder
 save([subj '_' runind '_res_vals.mat'],'erspl','itcpl','freql','erspr','itcpr','freqr','tl','tr','accel','thl','thr','tpl','tpr');
 save([subj '_' runind '_res_coherence.mat'],'coh_SO_L','coh_SO_R','coh_ST_L','coh_ST_R','coh_TA_L','coh_TA_R','coh_RF_L','coh_RF_R','coh_SO_Ls','coh_SO_Rs','coh_ST_Ls','coh_ST_Rs','coh_TA_Ls','coh_TA_Rs','coh_RF_Ls','coh_RF_Rs','PL1','PR1','PL2_SO','PR2_SO','PL2_ST','PR2_ST','PL2_RF','PR2_RF','PL3_SO','PR3_SO','PL3_ST','PR3_ST','PL3_TA','PR3_TA','PL3_RF','PR3_RF');
